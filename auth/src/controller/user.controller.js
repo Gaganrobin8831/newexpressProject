@@ -54,52 +54,57 @@ async function HandleReg(req, res) {
 
 async function HandleLogin(req, res) {
     try {
-        const { email, password } = req.body
+        const { email, password } = req.body;
+
         if (!(email && password)) {
-            res.status(400).send('Please fill email and pssword')
-
+            return res.status(400).send('Please fill email and password');
         }
 
-        const userDetail = await User.findOne({ email })
+        const userDetail = await User.findOne({ email });
         if (!userDetail) {
-            res.status(400).send('user not found')
+            return res.status(400).send('User not found');
         }
-        
-          // Check password
-        const checkpass = bcrypt.compare(password, userDetail.password, 10)
-        if (!checkpass) {
-            res.status(400).send('password is wrong')
+
+        // Check password using await
+        const isMatch = await bcrypt.compare(password, userDetail.password);
+        if (!isMatch) {
+            return res.status(400).send('Password is wrong');
         }
-         // Generate JWT token
-        const token = jwt.sign({
-            id: User._id,
-            email: User.email
-        },
+
+        // Generate JWT token
+        const token = jwt.sign(
+            {
+                id: userDetail._id,
+                email: userDetail.email
+            },
             process.env.JWT_SECRET,
             {
                 expiresIn: "2d"
             }
-        )
+        );
 
-        // Attach token to user detail (optional, if you need it)
-        User.token = token;
-        User.password = undefined // Remove password from the response from frontend
-          // Set cookie options
+        // Remove password from user detail
+        userDetail.password = undefined;
+
+        // Set cookie options
         const options = {
             expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
             httpOnly: true
-        }
-         // Send response with token and user details
-        res.status(200).cookie("token",token,options).json({
-            Succes:true,
+        };
+
+        // Send response with token and user details
+        res.status(200).cookie("token", token, options).json({
+            Success: true,
+            message:"YOU ARE SUCCESFULLY LOGIN",
             token: token,
             userDetail
-        })
+        });
     } catch (error) {
         console.error(error);
         res.status(500).send("Internal server error");
     }
 }
+
 module.exports = {
     HandleReg,
     HandleLogin
