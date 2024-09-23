@@ -62,10 +62,13 @@ async function forgetPassword(req,res) {
             return res.status(400).send({success:false,message:'Email not found'})
        }
        const otp = randomString.generate();
+
        await User.updateOne({email:req.body.email},
         {$set:{otp:otp}}
        )
+
        sendResetPasswordMail(data.name,data.email,otp)
+       
        return res.status(200).send({success:true,message:'Please Check your Email'})
 
     } catch (error) {
