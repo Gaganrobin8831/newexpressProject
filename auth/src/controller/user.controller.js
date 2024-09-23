@@ -95,7 +95,7 @@ async function HandleLogin(req, res) {
         // Send response with token and user details
         res.status(200).cookie("token", token, options).json({
             Success: true,
-            message:"YOU ARE SUCCESFULLY LOGIN",
+            message: "YOU ARE SUCCESFULLY LOGIN",
             token: token,
             userDetail
         });

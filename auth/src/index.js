@@ -9,16 +9,16 @@ const port = process.env.PORT
 
 app.use(express.json())
 app.use(cookieParser())
-app.use('/',router)
+app.use('/', router)
 
 connectDB()
-.then(()=>{
-   
-    
-    app.listen(port,()=>{
-        console.log(`server is running on port http://localhost:${port}/`);
+    .then(() => {
+
+
+        app.listen(port, () => {
+            console.log(`server is running on port http://localhost:${port}/`);
+        })
     })
-})
-.catch((err)=>{
-    console.log(err)
-})
+    .catch((err) => {
+        console.log(err)
+    })

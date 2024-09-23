@@ -8,7 +8,7 @@ let hashedPassword;
 
 // Encryption of the string password
 bcrypt.genSalt(10, function (err, Salt) {
-console.log({Salt})
+    console.log({ Salt })
     // The bcrypt is used for encrypting password.
     bcrypt.hash(password, Salt, function (err, hash) {
 
