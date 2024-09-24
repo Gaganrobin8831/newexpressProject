@@ -13,7 +13,7 @@ const CustomerSchema = new mongoose.Schema({
         required: true,
         lowercase: true
     },
-    Phone: {
+    phone: {
         type: Number,
         required: true
 
