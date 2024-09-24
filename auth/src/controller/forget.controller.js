@@ -16,7 +16,7 @@ async function hashPassword(password) {
 
 const sendResetPasswordMail = async (name, email, otp) => {
     try {
-        //         console.log('Email:', process.env.MY_EMAIL);
+        // console.log('Email:', process.env.MY_EMAIL);
         // console.log('Password:', process.env.MY_PASSWORD);
         // console.log({email});
 
