@@ -1,14 +1,13 @@
 const mongoose = require('mongoose')
 
 const OrderSchema = new mongoose.Schema({
-    customorID: {
-        type: mongoose.Types.ObjectId,
+    customerId: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Customer'
     },
-    OrderDate: {
+    orderDate: {
         type: Date,
-        default: Date.now
-
+        required: true
     },
     totalAmount: {
         type: Number,

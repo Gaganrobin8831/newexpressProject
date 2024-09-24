@@ -4,7 +4,10 @@ const Order = require('../models/order.models')
 
 async function HandlePost(req, res) {
         const { name, email, phone,orderDate, totalAmount } = req.body;
-
+        const lastMonth = new Date(orderDate);
+        
+         const newdate = `${lastMonth.getFullYear()}-${lastMonth.getMonth()+1}-${lastMonth.getDate()}`
+         console.log(new Date(newdate));
         try {
           //create custmor-----------------------------
             const newCustomer = new Customer({
@@ -14,16 +17,19 @@ async function HandlePost(req, res) {
             });
             const savedCustomer = await newCustomer.save();
           //------------------------------------------------- 
+            // console.log(savedCustomer);
             
           // create order --------------------------------------------
             const newOrder = new Order({
                 customerId: savedCustomer._id,
-                orderDate: new Date(orderDate),
+                orderDate: new Date(newdate),
                 totalAmount
             });
             const savedOrder = await newOrder.save();
+            console.log(savedOrder);
+            
         //------------------------------------------------------
-        console.log("You Are here");
+        // console.log("You Are here");
         
             res.status(201).json({
                 message: 'Order and Customer created successfully',
@@ -37,7 +43,39 @@ async function HandlePost(req, res) {
 
 
 }
+async function HandleGet(req,res) {
+    try {
+        const orders = await Order.aggregate([
+          {
+            $lookup: {
+              from: 'customers',
+              localField: 'customerId',
+              foreignField: '_id',
+              as: 'customerDetails'
+            }
+          },
+          {
+            $unwind: '$customerDetails' 
+          },
+          {
+            $project: {
+              orderId: 1,
+              totalAmount: 1,
+              'customerDetails.name': 1,
+              'customerDetails.email': 1
+            }
+          }
+        ]);
+        
+        
+        res.json(orders);
+      } catch (err) {
+        res.status(500).json({ error: err.message });
+      }
+}
+
 
 module.exports = {
-    HandlePost
+    HandlePost,
+    HandleGet
 }

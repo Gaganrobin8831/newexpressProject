@@ -1,11 +1,6 @@
 const express = require('express')
+const { HandleGet } = require('../controller/custmor.controller')
 const router = express.Router()
-
-router.route('/')
-.get((req, res) => {
-    res.send('Hello User')
-})
-
 
 
 module.exports = router
