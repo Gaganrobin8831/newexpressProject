@@ -1,0 +1,15 @@
+[{
+  $group: {
+    _id: "totalAmount",
+    average:{
+     $sum:1
+    }
+  }
+}]
+
+output :-
+
+_id
+"totalAmount"
+average
+2
