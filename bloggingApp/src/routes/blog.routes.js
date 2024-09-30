@@ -45,16 +45,7 @@ router.get("/:id", async (req, res) => {
 
   try {
     const blogs = await Blog.aggregate([
-      // Stage 1: Search for blogs that match the search term in the title or body
-      {
-        $match: {
-          $or: [
-            { title: { $regex: searchTerm, $options: "i" } },  // Case-insensitive search in title
-            { body: { $regex: searchTerm, $options: "i" } },   // Case-insensitive search in body
-          ],
-        },
-      },
-      // Stage 2: Lookup the user who created the blog (populate 'createdBy')
+   
       {
         $lookup: {
           from: "users",                // Collection to join (should be the name of your users collection)
@@ -63,49 +54,22 @@ router.get("/:id", async (req, res) => {
           as: "createdBy",               // Name for the resulting array field
         },
       },
-      // Stage 3: Unwind the 'createdBy' array to turn it into an object
+     
       {
         $unwind: "$createdBy",
       },
-      // Stage 4: Lookup the comments related to the blog
-      {
-        $lookup: {
-          from: "comments",              // Collection to join (should be the name of your comments collection)
-          localField: "_id",             // Blog ID
-          foreignField: "blogId",        // Field in Comment collection that matches Blog ID
-          as: "comments",                // Name for the resulting comments field
-        },
-      },
-      // Stage 5: Unwind the comments array to work with individual comments
-      {
-        $unwind: { path: "$comments", preserveNullAndEmptyArrays: true },
-      },
-      // Stage 6: Lookup the user who created the comment (populate 'createdBy' in comments)
-      {
-        $lookup: {
-          from: "users",
-          localField: "comments.createdBy",
-          foreignField: "_id",
-          as: "comments.createdBy",
-        },
-      },
-      // Stage 7: Unwind the 'createdBy' in comments (if there are comments)
-      {
-        $unwind: { path: "$comments.createdBy", preserveNullAndEmptyArrays: true },
-      },
-      // Stage 8: Group back the comments so that each blog has an array of comments again
       {
         $group: {
           _id: "$_id",
           title: { $first: "$title" },
           body: { $first: "$body" },
           createdBy: { $first: "$createdBy" },
-          comments: { $push: "$comments" },
           coverImageURL: { $first: "$coverImageURL" },
         },
       },
     ]);
-
+    console.log(blogs);
+    
     return res.render("blog", {
       user: req.user,
       blogs,
