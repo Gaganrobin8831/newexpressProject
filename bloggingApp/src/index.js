@@ -26,7 +26,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookiePaser());
 // Middleware to check for token on every request
 app.use(checkForAuthenticationCookie('token'));
-app.use(express.static(path.resolve("./public")));
+app.use(express.static(path.resolve("./src/public")));
+// console.log(path.resolve("./src/public"));
 
 
 app.use(router)

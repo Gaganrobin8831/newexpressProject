@@ -1,11 +1,13 @@
 const express = require('express')
 const router = express.Router()
-const User = require('../models/user.models')
-
+const Users = require('../models/user.models')
+const Blog = require('../models/blog.models')
 
 router.get("/", async (req, res) => {
-  
-    const allBlogs = await User.find({});
+  const allBlogs = await Blog.find({})
+    const users = await Users.find({});
+    console.log(allBlogs);
+    
     res.render("home", {
       user: req.user,
       blogs: allBlogs,
@@ -21,7 +23,7 @@ router.route('/signin').get((req,res)=>{
         console.log({ email, password });  // Log email and password for debugging
         
         // Ensure email is passed as lowercase
-        const token = await User.matchPasswordAndGenerateToken(email, password);
+        const token = await Users.matchPasswordAndGenerateToken(email, password);
 
         return res.cookie("token", token).redirect("/");
     } catch (error) {
@@ -45,7 +47,7 @@ router.route('/signup').get((req,res)=>{
     const {fullname,email,password} = req.body 
 console.log({fullname,email,password});
 
-    await User.create({
+    await Users.create({
         fullname,
         email,
         password,
