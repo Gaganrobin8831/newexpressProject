@@ -4,12 +4,14 @@ const app = express()
 const connectDB = require('./DB/database')
 const router = require('./routes/user.routes')
 const port = process.env.PORT
+const groupRouter = require('./routes/Group.routes')
 const cookieParser = require('cookie-parser')
-
-app.use(router)
+app.use(cookieParser())
 // app.use(express.urlencoded({extended:false}))
+app.use(router)
+app.use('/group',groupRouter)
 // app.use(express.json())
-app.use(cookieParser)
+
 
 
 

@@ -9,7 +9,8 @@ const GroupSchema = new mongoose.Schema({
     },
     createBy:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:'User'
+        ref:'User',
+        required:true
     },
     Users:[{
         type:mongoose.Schema.Types.ObjectId,

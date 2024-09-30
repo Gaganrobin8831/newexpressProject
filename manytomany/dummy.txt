@@ -1,0 +1,86 @@
+const express = require('express');
+const Group = require('../models/group');
+const authenticate = require('../middleware/authenticate');
+const authorize = require('../middleware/authorize');
+const router = express.Router();
+// Create Group (Only authenticated users)
+router.post('/', authenticate, async (req, res) => {
+  try {
+    const group = new Group({
+      groupName: req.body.groupName,
+      creator: req.user._id,
+      members: [req.user._id]
+    });
+    await group.save();
+    res.status(201).json({ message: 'Group created successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+// Join Group (Authenticated users)
+router.post('/:groupId/join', authenticate, async (req, res) => {
+  try {
+    const group = await Group.findById(req.params.groupId);
+    if (!group.members.includes(req.user._id)) {
+      group.members.push(req.user._id);
+      await group.save();
+    }
+    res.status(200).json({ message: 'Joined group successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+// Delete Group (Only group creator or admin)
+router.delete('/:groupId', authenticate, authorize(['admin', 'groupCreator']), async (req, res) => {
+  try {
+    const group = await Group.findById(req.params.groupId);
+    if (!group) return res.status(404).json({ message: 'Group not found' });
+    if (!group.creator.equals(req.user._id) && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Only the creator or an admin can delete this group' });
+    }
+    await group.remove();
+    res.status(200).json({ message: 'Group deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+module.exports = router;
+
+
+const express = require('express');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const User = require('../models/user');
+const router = express.Router();
+// Register Route
+router.post('/register', async (req, res) => {
+  const { name, email, password } = req.body;
+  try {
+    const user = new User({ name, email, password });
+    await user.save();
+    res.status(201).json({ message: 'User registered successfully' });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+// Login Route
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: 'Invalid email or password' });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: 'Invalid email or password' });
+    const token = jwt.sign({ _id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.cookie('jwtToken', token, { httpOnly: true, maxAge: 60 * 60 * 1000 });
+    res.status(200).json({ message: 'Login successful' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+// Logout Route
+router.post('/logout', (req, res) => {
+  res.clearCookie('jwtToken');
+  res.status(200).json({ message: 'Logged out successfully' });
+});
+module.exports = router;

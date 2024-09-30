@@ -15,16 +15,12 @@ const UserSchema = new mongoose.Schema({
     },
     password:{
         type:String,
-        lowercase:true,
+       
         required:true
     },
     role:{
         type:String,
         default:'user'
-    },
-    Groups:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'Groups'
     }
 },{timestamps:true})
 

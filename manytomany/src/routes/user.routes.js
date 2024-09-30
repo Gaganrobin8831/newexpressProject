@@ -1,5 +1,5 @@
 const express = require('express')
-const { HandlePost, HandleLogin } = require('../controllers/auth.controller')
+const { HandlePost, HandleLogin, HandleLogout } = require('../controllers/auth.controller')
 const router = express.Router()
 
 router.get('/',(req,res)=>{
@@ -9,5 +9,6 @@ router.get('/',(req,res)=>{
 })
 router.get('/register',HandlePost)
 router.get('/Login',HandleLogin)
+router.get('/Logout',HandleLogout)
 
 module.exports = router
