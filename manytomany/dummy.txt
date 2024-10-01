@@ -13,3 +13,7 @@ http://localhost:5252/group/listGroups
 
 create group and with one user add 
 http://localhost:5252/group/create?GroupName=second&createBy=Gagan&Users=Robin
+
+
+delete group only can admin
+http://localhost:5252/group/delete?GroupName=first
