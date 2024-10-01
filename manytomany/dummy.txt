@@ -1,0 +1,6 @@
+
+for login api
+http://localhost:5252/Login?email=gagan2@gmail.com&password=2525
+
+for registor 
+http://localhost:5252/register?name=Gagan&email=gagan2@gmail.com&password=2525
