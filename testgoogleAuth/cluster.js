@@ -16,8 +16,12 @@ if (cluster.isPrimary) {
     console.log(`worker ${worker.process.pid} died`);
   });
 } else {
+
+    app.get('/',(req,res)=>{
+        return res.json({msg:`Worker ${process.pid} started`})
+    })
   app.listen(port,()=>{
     console.log(`your port is run on port : ${port}`);
   })
-  console.log(`Worker ${process.pid} started`);
+//   console.log(`Worker ${process.pid} started`);
 }
