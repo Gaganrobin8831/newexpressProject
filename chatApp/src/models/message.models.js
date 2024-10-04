@@ -9,12 +9,9 @@ const messageSchema = new mongoose.Schema({
   content: {
     type: String,
     required: true,
-  },
-  timestamp: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  }
+},
+{timestamps:true});
 
 // Create the Message model
 const Message = mongoose.model('Message', messageSchema);
