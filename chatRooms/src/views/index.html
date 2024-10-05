@@ -94,13 +94,13 @@
   <div class="centered" id="loginScreen">
     <h1>Join Chat Room</h1>
     <div>
-      <input type="text" id="username" placeholder="Enter your username">
+      <input type="text" id="usernameInput" placeholder="Enter your username">
     </div>
     <div style="margin-top: 10px;">
-      <input type="text" id="room" placeholder="Enter room name">
+      <input type="text" id="roomInput" placeholder="Enter room name">
     </div>
     <div style="margin-top: 10px;">
-      <button id="joinRoomBtn">Join Room</button>
+      <button id="joinRoomBtn" type="submit">Join Room</button>
     </div>
   </div>
 
@@ -118,7 +118,7 @@
     <!-- Chat input area -->
     <div class="chat-input">
       <input type="text" id="messageInput" placeholder="Type your message...">
-      <button id="sendBtn">Send</button>
+      <button id="sendBtn" type="submit">Send</button>
     </div>
   </div>
 
@@ -129,56 +129,74 @@
     const socket = io();
 
     const joinRoomBtn = document.getElementById('joinRoomBtn');
-    const sendBtn = document.getElementById('sendBtn');
     const messageInput = document.getElementById('messageInput');
-    const roomInput = document.getElementById('room');
-    const usernameInput = document.getElementById('username');
+    const messages = document.getElementById('messages');
+    const usernameInput = document.getElementById('usernameInput');
+    const roomInput = document.getElementById('roomInput');
     const loginScreen = document.getElementById('loginScreen');
     const chatScreen = document.getElementById('chatScreen');
-    const roomNameDisplay = document.getElementById('roomName');
+    const roomNameHeader = document.getElementById('roomName');
+
     let currentRoom = '';
     let username = '';
 
-    // Join a room
+    // Join a room when clicking "Join Room" button
     joinRoomBtn.addEventListener('click', () => {
-      const room = roomInput.value;
-      username = usernameInput.value; // Capture username from input
-      if (room && username) {
-        currentRoom = room;
-        socket.emit('join room', { username, room }); // Send both username and room to the server
-        roomNameDisplay.textContent = `Room: ${room}`; // Display the room name in the header
-
-        // Switch to chat screen
+      username = usernameInput.value;
+      currentRoom = roomInput.value;
+      if (username && currentRoom) {
+        socket.emit('join room', { username, room: currentRoom });
+        
+        // Hide the login screen and show the chat screen
         loginScreen.style.display = 'none';
         chatScreen.style.display = 'flex';
-      } else {
-        alert('Please enter both username and room');
+
+        // Update room name in the header
+        roomNameHeader.textContent = `Room: ${currentRoom}`;
       }
     });
 
-    // Send a chat message
-    sendBtn.addEventListener('click', () => {
+    // Send a chat message when pressing the "Send" button or hitting "Enter"
+    document.addEventListener('keypress', (event) => {
+      if (event.key === 'Enter' && messageInput.value) {
+        sendMessage();
+      }
+    });
+
+    // Send button event listener
+    document.getElementById('sendBtn').addEventListener('click', () => {
+      sendMessage();
+    });
+
+    function sendMessage() {
       const message = messageInput.value;
-      if (message && currentRoom && username) {
-        socket.emit('chat message', { username, room: currentRoom, message }); // Include username in chat message
-        messageInput.value = ''; // Clear input after sending
-      } else {
-        alert('Please enter a message and join a room');
+      if (message && currentRoom) {
+        socket.emit('chat message', { username, room: currentRoom, message });
+        messageInput.value = '';  // Clear the input after sending
       }
+    }
+
+    // Display previous messages when the user joins a room
+    socket.on('previous messages', (messages) => {
+      messages.forEach((data) => {
+        const li = document.createElement('li');
+        li.textContent = `${data.user}: ${data.content}`;
+        document.querySelector('#messages ul').appendChild(li);
+      });
     });
 
-    // Listen for chat messages
+    // Listen for new chat messages
     socket.on('chat message', (data) => {
       const li = document.createElement('li');
-      li.textContent = `${data.user}: ${data.content}`; // Display user and message
-      document.getElementById('messages').querySelector('ul').appendChild(li);
+      li.textContent = `${data.user}: ${data.content}`;
+      document.querySelector('#messages ul').appendChild(li);
     });
 
-    // Listen for room notifications (e.g., when a user joins or leaves)
+    // Listen for room notifications
     socket.on('message', (message) => {
       const li = document.createElement('li');
-      li.textContent = message.content;
-      document.getElementById('messages').querySelector('ul').appendChild(li);
+      li.textContent = message;
+      document.querySelector('#messages ul').appendChild(li);
     });
   </script>
 
