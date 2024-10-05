@@ -32,7 +32,7 @@ connectDBrooms()
       socket.on('join room', async ({ username, room }) => {
         try {
           // Use the handleUserConnection function to manage user state
-          const user = await handleUserConnection(username);
+          const user = await handleUserConnection(username,room);
 
           // Join the room
           socket.join(room);

@@ -2,14 +2,14 @@ const mongoose = require('mongoose');
 const User = require('../models/user.models'); // Assuming you have a User model defined
 
 // Function to handle user reconnection
-async function handleUserConnection(username) {
+async function handleUserConnection(username,room) {
   try {
     // Check if the user already exists
     let user = await User.findOne({ username });
 
     if (!user) {
       // If the user doesn't exist, create a new user
-      user = new User({ username });
+      user = new User({ username ,room});
       await user.save();
       console.log(`New user created: ${username}`);
     } else {
