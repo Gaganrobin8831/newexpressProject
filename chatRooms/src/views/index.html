@@ -112,7 +112,7 @@
     
     <!-- Chat messages area -->
     <div class="chat-messages" id="messages">
-      <ul></ul>
+      <ul class="MyMessageUl"></ul>
     </div>
 
     <!-- Chat input area -->
@@ -181,6 +181,14 @@
       messages.forEach((data) => {
         const li = document.createElement('li');
         li.textContent = `${data.user}: ${data.content}`;
+        if (data.user === username) {
+          const myUl = document.querySelector('MyMessageUl')
+          li.style.display = 'flex';
+          li.style.justifyContent = 'flex-end';
+        }else{
+          li.style.display = 'flex';
+          li.style.justifyContent = 'flex-start';
+        }
         document.querySelector('#messages ul').appendChild(li);
       });
     });
@@ -189,6 +197,14 @@
     socket.on('chat message', (data) => {
       const li = document.createElement('li');
       li.textContent = `${data.user}: ${data.content}`;
+      if (data.user === username) {
+          const myUl = document.querySelector('MyMessageUl')
+          li.style.display = 'flex';
+          li.style.justifyContent = 'flex-end';
+        }else{
+          li.style.display = 'flex';
+          li.style.justifyContent = 'flex-start';
+        }
       document.querySelector('#messages ul').appendChild(li);
     });
 
@@ -196,6 +212,14 @@
     socket.on('message', (message) => {
       const li = document.createElement('li');
       li.textContent = message;
+      if (data.user === username) {
+          const myUl = document.querySelector('MyMessageUl')
+          li.style.display = 'flex';
+          li.style.justifyContent = 'flex-end';
+        }else{
+          li.style.display = 'flex';
+          li.style.justifyContent = 'flex-start';
+        }
       document.querySelector('#messages ul').appendChild(li);
     });
   </script>
