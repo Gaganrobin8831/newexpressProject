@@ -1,0 +1,20 @@
+{
+  "name": "livelocation",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^4.20.0",
+    "socket.io": "^4.8.0"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
