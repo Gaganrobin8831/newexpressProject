@@ -21,15 +21,61 @@ html,body{
     height: 100%;
 }
 
-
+#map{
+    height: 100vmax;
+    width: 100%;
+}
 </style>
 <body>
     <div id="map"></div>
 </body>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-<script src="../public//js/script.js"></script>
+
 
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
 <script src="/socket.io/socket.io.js"></script>
 </html>
+<script>
+    const socket = io();
+
+if (navigator.geolocation) {
+    navigator.geolocation.watchPosition((position) => {
+        const { latitude, longitude } = position.coords
+        socket.emit('send-location', { latitude, longitude })
+    }, (error) => {
+        console.log(error)
+    },
+    {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge:0
+    }
+);
+}
+const map = L.map("map").setView([0,0],16)
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+    attribution:"Gagandeep Singh",
+
+}).addTo(map)
+const markers = {}
+
+socket.on("recive-location",(data)=>{
+    const {id ,latitude,longitude} = data;
+    map.setView([latitude,longitude]);
+    if(markers[id]){
+        markers[id].setLatLng([latitude,longitude]);
+
+    }else{
+        markers[id]=L.marker([latitude,longitude]).addTo(map)
+    }
+
+})
+
+socket.on("User-disconnect",(id)=>{
+    if (markers[id]) {
+        map.removeLayer(markers[id])
+        delete markers[id]
+    }
+})
+</script>
