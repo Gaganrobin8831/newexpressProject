@@ -1,10 +1,11 @@
+require('dotenv').config()
 const express = require('express')
 const app = express()
 const http = require('http').createServer(app)
 const socketio = require('socket.io')
 const path = require('path')
 const io = socketio(http)
-
+const port = 3000 || process.env.PORT
 app.set("view engine","ejs")
 
 
@@ -23,7 +24,7 @@ io.on("connection",(socket)=>{
         io.emit("User-disconnect",socket.id)
     })
 })
-http.listen(3000,()=>{
-    console.log(`the server run on http://localhost:${3000}/`);
+http.listen(port,()=>{
+    console.log(`the server run on http://localhost:${port}/`);
     
 })
