@@ -6,7 +6,7 @@ const path = require('path')
 const io = socketio(http)
 
 app.set("view engine","ejs")
-app.set(express.static(path.join(__dirname,"public")))
+
 
 app.get('/', function (req, res) {
     res.render('index')
