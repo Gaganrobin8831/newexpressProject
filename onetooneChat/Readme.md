@@ -1,0 +1,1 @@
+npm cache clean --force /// for clear the cache
