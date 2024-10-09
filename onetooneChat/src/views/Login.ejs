@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registor</title>
+    <title>Login</title>
 </head>
 <style>
     /* From Uiverse.io by Spacious74 */ 
@@ -125,19 +125,16 @@ body {
 <body>
     
     <div class="container">
-      <div class="heading">Enter Your Detail</div>
-      <form class="form" action="/regester"  method="post">
+      <div class="heading">Enter Your Login Detail</div>
+     <!-- Only display the message if it exists -->
+     <div style="color: red;">
+        <% if (message) { %>
+            <%= message %>
+        <% } %>
+    </div>
+      <form class="form" action="/Login" method="post" >
 
-        <div class="input-field">
-          <input
-            required=""
-            autocomplete="off"
-            type="text"
-            name="fullName"
-            id="username"
-          />
-          <label for="username">Full Name</label>
-        </div>
+    
         <div class="input-field">
           <input
             required=""
@@ -158,12 +155,12 @@ body {
             />
             <label for="username">Password</label>
           </div>
-       
+    
         <div class="btn-container">
           <button class="btn" type="submit">Submit</button>
         
         </div>
-        <span>For Already User <a href="/Login">Click Me</a></span>
+        <span>For New User <a href="/regester">Click Me</a></span>
       </form>
     </div>
     

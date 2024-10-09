@@ -35,13 +35,39 @@
         justify-content: space-around;
 
     }
-.row1{
-    background-color: white;
-    width: 20%;
+
+    .row1 {
+        background-color: #AD49E1;
+        width: 20%;
         height: 40vmax;
         margin-left: 5vw;
         margin-right: -11.7vw;
-}
+        display: flex;
+        flex-direction: column;
+        align-items: start;
+
+    }
+
+    .row1 h2 {
+        background-color: #2E073F;
+        width: 100%;
+        height: 4vmax;
+        color: white;
+        padding: 10px;
+    }
+
+    .row1 .boxforuser {
+        width: 100%;
+        height: 36vmax;
+
+    }
+
+    .row1 .boxforuser ul li {
+        list-style: none;
+        width: 100%;
+        margin: 0;
+    }
+
     header {
         background-color: #2E073F;
         width: 100%;
@@ -82,7 +108,7 @@
         border: 0;
         outline: 0;
         font-size: 1.1vmax;
-        
+
 
     }
 
@@ -199,7 +225,7 @@
     li {
         margin: 10px;
         width: 50%;
-        
+
         list-style: none;
         font-size: larger;
         box-shadow: 2px 0px 2px 0px gray;
@@ -212,7 +238,21 @@
 
 <body>
     <div class="container">
-        <div class="row row1"></div>
+        <div class="row row1">
+            <h2>
+                <%= user.name %>
+            </h2>
+            <div class="boxforuser">
+                <ul>
+                    <% alluser.forEach(element=> { %>
+                        <li data-username="<%= element.FullName %>">
+                           <%= element.FullName %>
+                            
+                        </li>
+                        <% }) %>
+                </ul>
+            </div>
+        </div>
         <div class="row">
             <header>
 
@@ -235,12 +275,12 @@
                     </div>
                 </button>
 
-                <h2>CHAT</h2>
+                <h2 class="chatboxUser">User</h2>
 
             </header>
             <div class="middlebox">
-                <ul>
-<li>Hello</li>
+                <ul id="messageList">
+                    <li >Welcome to the chat!</li>
                 </ul>
             </div>
             <footer>
@@ -267,27 +307,67 @@
 <!-- Socket.IO Script -->
 <script src="/socket.io/socket.io.js"></script>
 <script>
-    const socket = io();
-    const getInputValue = document.querySelector(".myInput");
-    const sendButton = document.querySelector('.btn');
-    const myul = document.querySelector('ul');
+ const socket = io();
+const getInputValue = document.querySelector(".myInput");
+const sendButton = document.querySelector('.btn');
+const myul = document.querySelector('.middlebox ul');
 
-    // Move the listener outside of the button click event
-    socket.on('recivemessage', (d) => {
+let currentRoom = ''; // Track the current room
+
+// Function to join a room and retrieve its chat history
+function joinRoom(roomName) {
+    if (currentRoom) {
+        socket.emit('leaveRoom', currentRoom); // Leave the previous room
+    }
+    currentRoom = roomName;
+    socket.emit('joinRoom', roomName); // Join the new room
+
+    // Clear the chatbox for the new room
+    myul.innerHTML = '';
+
+    // Request chat history for the new room
+    socket.emit('getChatHistory', roomName);
+}
+
+// Listen for incoming messages from the server
+socket.on('recivemessage', (message) => {
+    const createli = document.createElement('li');
+    createli.textContent = message;
+    myul.appendChild(createli);
+});
+
+// Listen for chat history and load it into the chatbox
+socket.on('chatHistory', (messages) => {
+    myul.innerHTML = ''; // Clear the current messages
+    messages.forEach((message) => {
         const createli = document.createElement('li');
-        console.log(d);
-
-        createli.textContent = d;
-        myul.appendChild(createli); // Use the cached reference to 'myul'
+        createli.textContent = message;
+        myul.appendChild(createli);
     });
+});
 
-    // Add the click event handler
-    sendButton.addEventListener('click', () => {
-        const message = getInputValue.value;
+// Send message when button is clicked
+sendButton.addEventListener('click', () => {
+    const message = getInputValue.value;
+
+    if (message.trim() && currentRoom) {
+        socket.emit('chatMessage', { message, room: currentRoom });
+        getInputValue.value = ''; // Clear the input field after sending
+    } else {
+        alert("Please select a user to chat with!");
+    }
+});
+
+// Add event listener for selecting a user to chat with (joining a room)
+const userListItems = document.querySelectorAll('.boxforuser ul li');
+const chatboxUser = document.querySelector('.chatboxUser');
+userListItems.forEach((item) => {
+    item.addEventListener('click', () => {
+        chatboxUser.textContent = item.textContent.trim(); // Update the selected user's name
+        const userName = item.textContent.trim();
         
-        if (message.trim()) { // Ensure that the input is not empty
-            socket.emit('chatMessage', message);
-            getInputValue.value = ''; // Clear the input field after sending
-        }
+        joinRoom(userName); // Join the room for the selected user
     });
+});
+
 </script>
