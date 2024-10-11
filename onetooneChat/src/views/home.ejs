@@ -66,6 +66,8 @@
         list-style: none;
         width: 100%;
         margin: 0;
+        display: flex;
+        flex-wrap: wrap;
     }
 
     header {
@@ -243,11 +245,22 @@
                 <%= user.name %>
             </h2>
             <div class="boxforuser">
+                <h2 hidden class="FromUser">
+                    <%= user.name %>
+                </h2>
                 <ul>
+
                     <% alluser.forEach(element=> { %>
-                        <li data-username="<%= element.FullName %>" onclick="setiD('<%= element._id %>')">
-                            <%= element.FullName %>
-                        </li>
+
+                        <span class="myid" hidden>
+                            <%= element._id %>
+                        </span>
+                        <% if (element.FullName !==  user.name) { %>
+                            <li data-username="<%= element.FullName %>">
+                                <%= element.FullName %>
+                            </li>
+                        <% } %>
+                       
                         <% }) %>
                 </ul>
 
@@ -307,96 +320,93 @@
 <!-- Socket.IO Script -->
 <script src="/socket.io/socket.io.js"></script>
 <script>
-    const socket = io();
-    const getInputValue = document.querySelector(".myInput");
-    const sendButton = document.querySelector('.btn');
-    const myul = document.querySelector('.middlebox ul');
+    document.addEventListener('DOMContentLoaded', () => {
+        const socket = io();
+        const getInputValue = document.querySelector(".myInput");
+        const sendButton = document.querySelector('.btn');
+        const myul = document.querySelector('.middlebox ul');
+        const chatboxUser = document.querySelector('.chatboxUser');
 
-    let currentRoom = ''; // Track the current room
+        let currentRoom = ''; // Track the current room
+        let selectedUserId = document.querySelector(".FromUser").textContent.trim(); // Get the current user ID
 
-    // Function to join a room and retrieve its chat history
-    function joinRoom(roomName) {
-        if (currentRoom) {
-            socket.emit('leaveRoom', currentRoom); // Leave the previous room
+        if (!chatboxUser) {
+            console.error("Element '.chatboxUser' not found.");
+            return; // Exit if chatboxUser is not found
         }
-        currentRoom = roomName;
-        socket.emit('joinRoom', roomName); // Join the new room
 
-        // Clear the chatbox for the new room
-        myul.innerHTML = '';
+        // Function to join a room and retrieve its chat history
+        function joinRoom(roomName) {
+            if (currentRoom) {
+                socket.emit('leaveRoom', currentRoom); // Leave the previous room
+            }
+            currentRoom = roomName;
+            socket.emit('joinRoom', roomName); // Join the new room
 
-        // Request chat history for the new room
-        socket.emit('getChatHistory', roomName);
-    }
+            // Clear the chatbox for the new room
+            myul.innerHTML = '';
 
-    // Listen for incoming messages from the server
-    socket.on('recivemessage', (message) => {
-        const createli = document.createElement('li');
-        createli.textContent = message;
-        myul.appendChild(createli);
-    });
+            // Request chat history for the new room
+            // socket.emit('getChatHistory', roomName);
+        }
 
-    // Listen for chat history and load it into the chatbox
-    socket.on('chatHistory', (messages) => {
-        // myul.innerHTML = ''; // Clear the current messages
-        console.log(messages);
-        
-        messages.map((message) => {
+        // Listen for incoming messages from the server
+        socket.on('recivemessage', (message) => {
             const createli = document.createElement('li');
-            createli.textContent = message.content;
+            createli.textContent = message;
             myul.appendChild(createli);
         });
-    });
 
-  // Send a chat message when pressing the "Send" button or hitting "Enter"
-  document.addEventListener('keypress', (event) => {
-      if (event.key === 'Enter' && getInputValue.value) {
-        sendMessage();
-      }
-    });
+        // Listen for incoming chat history
+        socket.on('chatHistory', (messages) => {
+            myul.innerHTML = ''; // Clear the current chatbox
 
-    // Send button event listener
-    sendButton.addEventListener('click', () => {
-      sendMessage();
-    });
-function sendMessage() {
-    const message = getInputValue.value;
-        if (message.trim() && currentRoom) {
-            socket.emit('chatMessage', { message, room: currentRoom, to:currentRoom, from:selectedUserId });
-            getInputValue.value = ''; // Clear the input field after sending
-        } else {
-            alert("Please select a user to chat with!");
+            messages.forEach((message) => {
+                const createli = document.createElement('li');
+
+                // Check if the message is from the current user or from the other user
+                if (message.fromUser.FullName === selectedUserId) {
+                    createli.classList.add('fromMe'); // Add a class for styling
+                    createli.textContent = `You: ${message.content}`;
+                } else {
+                    createli.classList.add('fromThem');
+                    createli.textContent = `${message.fromUser.FullName}: ${message.content}`;
+                }
+
+                myul.appendChild(createli);
+            });
+        });
+
+        // Send a chat message when pressing the "Send" button or hitting "Enter"
+        document.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter' && getInputValue.value) {
+                sendMessage();
+            }
+        });
+
+        // Send button event listener
+        sendButton.addEventListener('click', () => {
+            sendMessage();
+        });
+
+        function sendMessage() {
+            const message = getInputValue.value;
+            if (message.trim() && currentRoom) {
+                socket.emit('chatMessage', { message, room: currentRoom, to: currentRoom, from: selectedUserId });
+                getInputValue.value = ''; // Clear the input field after sending
+            } else {
+                alert("Please select a user to chat with!");
+            }
         }
-}
-    // // Send message when button is clicked
-    // sendButton.addEventListener('click', () => {
-    //     const message = getInputValue.value;
-    //     if (message.trim() && currentRoom) {
-    //         socket.emit('chatMessage', { message, room: currentRoom, to:currentRoom, from:selectedUserId });
-    //         getInputValue.value = ''; // Clear the input field after sending
-    //     } else {
-    //         alert("Please select a user to chat with!");
-    //     }
-    // });
 
-    // Variable to store the selected user's ID
-    let selectedUserId = null;
-
-    // Function to set the user ID when a user is selected
-    function setiD(id) {
-        selectedUserId = id;
-        console.log('Selected User ID:', id);
-    }
-
-    // Add event listener for selecting a user to chat with (joining a room)
-    const userListItems = document.querySelectorAll('.boxforuser ul li');
-    const chatboxUser = document.querySelector('.chatboxUser');
-    userListItems.forEach((item) => {
-        item.addEventListener('click', () => {
-            chatboxUser.textContent = item.textContent.trim(); // Update the selected user's name
-            const userName = item.textContent.trim();
-
-            joinRoom(userName); // Join the room for the selected user
+        // Add event listener for selecting a user to chat with (joining a room)
+        const userListItems = document.querySelectorAll('.boxforuser ul li');
+        userListItems.forEach((item) => {
+            item.addEventListener('click', () => {
+                chatboxUser.textContent = item.textContent.trim(); // Update the selected user's name
+                const userName = item.textContent.trim();
+                joinRoom(userName); // Join the room for the selected user
+            });
         });
     });
 

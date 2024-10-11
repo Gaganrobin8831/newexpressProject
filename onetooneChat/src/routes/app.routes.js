@@ -11,7 +11,7 @@ router.get('/', checkAuth,async (req, res) => {
     try {
         const AllUser = await User.find({})
         console.log(AllUser);
-        
+      
            // Construct the absolute path to the home.ejs file
     res.render(path.join(__dirname, '..', 'views', 'home.ejs'),{user:req.user ,alluser:AllUser}); // Go up one level to access the views folder
 

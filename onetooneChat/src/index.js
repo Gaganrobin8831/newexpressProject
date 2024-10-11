@@ -30,31 +30,59 @@ connctDBforChat()
         console.log('A user connected:', socket.id);
     
         // Handle chat message
+        // Handle chat message
         socket.on('chatMessage', async ({message, room,to,from }) => {
+            console.log({message, room,to,from });
+            
             // console.log({message, room,to,from });
             const todata = await User.findOne({
                 FullName:to})
             console.log(todata);
-            
+            const fromData = await User.findOne({
+                FullName:from})
+            console.log(fromData);
     // const userId = await User.
 
-            const msg = new Message({ room, content:message,to:todata._id,from}); // Save the message with the room info
+            const msg = new Message({ room, content:message,to:todata._id,from:fromData}); // Save the message with the room info
             await msg.save(); // Save to database
             io.to(room).emit('recivemessage', message); // Broadcast message to the room
         });
     
         // Handle joining a room
-        socket.on('joinRoom',async(room) => {
-            socket.join(room); // Join the specific room
+        socket.on('joinRoom', async (room) => {
+            socket.join(room); // Join room
     
-            // Retrieve the chat history from the database for the room
-           const allMesaageHistoryofusers = await Message.find({ room })
-           console.log(allMesaageHistoryofusers);
-           socket.emit('chatHistory', allMesaageHistoryofusers); 
-        //    allMesaageHistoryofusers.map((messages) => {
-        //         const chatHistory = messages.message // Extract messages
-        //        // Send the chat history to the client
-        //     });
+            // Fetch chat history from the database for the room
+            const allMessageHistory = await Message.aggregate([
+                { $match: { room } },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'from',
+                        foreignField: '_id',
+                        as: 'fromUser',
+                    },
+                },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'to',
+                        foreignField: '_id',
+                        as: 'toUser',
+                    },
+                },
+                { $unwind: '$fromUser' },
+                { $unwind: '$toUser' },
+                {
+                    $project: {
+                        content: 1,
+                        'fromUser.FullName': 1,
+                        'toUser.FullName': 1,
+                    },
+                },
+            ]);
+    
+            socket.emit('chatHistory', allMessageHistory); // Send chat history to the client
         });
     
         // Handle leaving a room
@@ -62,7 +90,6 @@ connctDBforChat()
             socket.leave(room);
         });
     
-        // Handle user disconnection
         socket.on('disconnect', () => {
             console.log('User disconnected:', socket.id);
         });
