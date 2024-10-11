@@ -348,16 +348,36 @@
         });
     });
 
-    // Send message when button is clicked
+  // Send a chat message when pressing the "Send" button or hitting "Enter"
+  document.addEventListener('keypress', (event) => {
+      if (event.key === 'Enter' && getInputValue.value) {
+        sendMessage();
+      }
+    });
+
+    // Send button event listener
     sendButton.addEventListener('click', () => {
-        const message = getInputValue.value;
+      sendMessage();
+    });
+function sendMessage() {
+    const message = getInputValue.value;
         if (message.trim() && currentRoom) {
             socket.emit('chatMessage', { message, room: currentRoom, to:currentRoom, from:selectedUserId });
             getInputValue.value = ''; // Clear the input field after sending
         } else {
             alert("Please select a user to chat with!");
         }
-    });
+}
+    // // Send message when button is clicked
+    // sendButton.addEventListener('click', () => {
+    //     const message = getInputValue.value;
+    //     if (message.trim() && currentRoom) {
+    //         socket.emit('chatMessage', { message, room: currentRoom, to:currentRoom, from:selectedUserId });
+    //         getInputValue.value = ''; // Clear the input field after sending
+    //     } else {
+    //         alert("Please select a user to chat with!");
+    //     }
+    // });
 
     // Variable to store the selected user's ID
     let selectedUserId = null;
