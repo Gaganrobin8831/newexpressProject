@@ -245,12 +245,12 @@
             <div class="boxforuser">
                 <ul>
                     <% alluser.forEach(element=> { %>
-                        <li data-username="<%= element.FullName %>">
-                           <%= element.FullName %>
-                            
+                        <li data-username="<%= element.FullName %>" onclick="setiD('<%= element._id %>')">
+                            <%= element.FullName %>
                         </li>
                         <% }) %>
                 </ul>
+
             </div>
         </div>
         <div class="row">
@@ -280,7 +280,7 @@
             </header>
             <div class="middlebox">
                 <ul id="messageList">
-                    <li >Welcome to the chat!</li>
+                    <li>Welcome to the chat!</li>
                 </ul>
             </div>
             <footer>
@@ -307,67 +307,77 @@
 <!-- Socket.IO Script -->
 <script src="/socket.io/socket.io.js"></script>
 <script>
- const socket = io();
-const getInputValue = document.querySelector(".myInput");
-const sendButton = document.querySelector('.btn');
-const myul = document.querySelector('.middlebox ul');
+    const socket = io();
+    const getInputValue = document.querySelector(".myInput");
+    const sendButton = document.querySelector('.btn');
+    const myul = document.querySelector('.middlebox ul');
 
-let currentRoom = ''; // Track the current room
+    let currentRoom = ''; // Track the current room
 
-// Function to join a room and retrieve its chat history
-function joinRoom(roomName) {
-    if (currentRoom) {
-        socket.emit('leaveRoom', currentRoom); // Leave the previous room
+    // Function to join a room and retrieve its chat history
+    function joinRoom(roomName) {
+        if (currentRoom) {
+            socket.emit('leaveRoom', currentRoom); // Leave the previous room
+        }
+        currentRoom = roomName;
+        socket.emit('joinRoom', roomName); // Join the new room
+
+        // Clear the chatbox for the new room
+        myul.innerHTML = '';
+
+        // Request chat history for the new room
+        socket.emit('getChatHistory', roomName);
     }
-    currentRoom = roomName;
-    socket.emit('joinRoom', roomName); // Join the new room
 
-    // Clear the chatbox for the new room
-    myul.innerHTML = '';
-
-    // Request chat history for the new room
-    socket.emit('getChatHistory', roomName);
-}
-
-// Listen for incoming messages from the server
-socket.on('recivemessage', (message) => {
-    const createli = document.createElement('li');
-    createli.textContent = message;
-    myul.appendChild(createli);
-});
-
-// Listen for chat history and load it into the chatbox
-socket.on('chatHistory', (messages) => {
-    myul.innerHTML = ''; // Clear the current messages
-    messages.forEach((message) => {
+    // Listen for incoming messages from the server
+    socket.on('recivemessage', (message) => {
         const createli = document.createElement('li');
         createli.textContent = message;
         myul.appendChild(createli);
     });
-});
 
-// Send message when button is clicked
-sendButton.addEventListener('click', () => {
-    const message = getInputValue.value;
-
-    if (message.trim() && currentRoom) {
-        socket.emit('chatMessage', { message, room: currentRoom });
-        getInputValue.value = ''; // Clear the input field after sending
-    } else {
-        alert("Please select a user to chat with!");
-    }
-});
-
-// Add event listener for selecting a user to chat with (joining a room)
-const userListItems = document.querySelectorAll('.boxforuser ul li');
-const chatboxUser = document.querySelector('.chatboxUser');
-userListItems.forEach((item) => {
-    item.addEventListener('click', () => {
-        chatboxUser.textContent = item.textContent.trim(); // Update the selected user's name
-        const userName = item.textContent.trim();
+    // Listen for chat history and load it into the chatbox
+    socket.on('chatHistory', (messages) => {
+        // myul.innerHTML = ''; // Clear the current messages
+        console.log(messages);
         
-        joinRoom(userName); // Join the room for the selected user
+        messages.map((message) => {
+            const createli = document.createElement('li');
+            createli.textContent = message.content;
+            myul.appendChild(createli);
+        });
     });
-});
+
+    // Send message when button is clicked
+    sendButton.addEventListener('click', () => {
+        const message = getInputValue.value;
+        if (message.trim() && currentRoom) {
+            socket.emit('chatMessage', { message, room: currentRoom, to:currentRoom, from:selectedUserId });
+            getInputValue.value = ''; // Clear the input field after sending
+        } else {
+            alert("Please select a user to chat with!");
+        }
+    });
+
+    // Variable to store the selected user's ID
+    let selectedUserId = null;
+
+    // Function to set the user ID when a user is selected
+    function setiD(id) {
+        selectedUserId = id;
+        console.log('Selected User ID:', id);
+    }
+
+    // Add event listener for selecting a user to chat with (joining a room)
+    const userListItems = document.querySelectorAll('.boxforuser ul li');
+    const chatboxUser = document.querySelector('.chatboxUser');
+    userListItems.forEach((item) => {
+        item.addEventListener('click', () => {
+            chatboxUser.textContent = item.textContent.trim(); // Update the selected user's name
+            const userName = item.textContent.trim();
+
+            joinRoom(userName); // Join the room for the selected user
+        });
+    });
 
 </script>
