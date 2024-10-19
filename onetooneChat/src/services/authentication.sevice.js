@@ -1,6 +1,6 @@
 const JWT = require('jsonwebtoken');
 
-const secret = "superMan@1234";  // Be cautious about storing secrets like this
+const secret = process.env.secret;  // Be cautious about storing secrets like this
 
 function createTokenUser(user) {
     console.log("HEllo ",user);
@@ -12,14 +12,14 @@ function createTokenUser(user) {
         
     };
 
-    const token = JWT.sign(payload, "thdgfiawyutryty3r634gt", { expiresIn: "1d" });
+    const token = JWT.sign(payload, secret, { expiresIn: "1d" });
     console.log(token);
     
     return token;
 }
 
 function validateToken(token) {
-    return JWT.verify(token, "thdgfiawyutryty3r634gt");
+    return JWT.verify(token, secret);
 }
 
 module.exports = {

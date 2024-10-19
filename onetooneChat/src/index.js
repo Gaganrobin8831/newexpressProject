@@ -11,6 +11,8 @@ const User = require('./models/user.models')
 
 const path = require('path'); // Import the path module
 const connctDBforChat = require('./DB/database');
+const jwt = require('jsonwebtoken');
+const cookie = require('cookie')
 
 const port = process.env.PORT || 2121;
 
@@ -27,6 +29,26 @@ connctDBforChat()
 .then(() => {
     console.log('Connected to MongoDB');
     io.on('connection', (socket) => {
+
+
+
+        const cookies = socket.handshake.headers.cookie;
+        let request = {}; // This will hold the user info
+        
+        if (cookies) {
+            const parsedCookies = cookie.parse(cookies);
+            const token = parsedCookies['authToken']; // Assuming 'token' is the cookie name
+    
+            
+               
+                    request = jwt.verify(token, process.env.secret); // Decode the token
+                    console.log("User ID from token:", request._id);
+            
+        }
+
+
+
+
         console.log('A user connected:', socket.id);
     
         // Handle chat message
@@ -37,11 +59,17 @@ connctDBforChat()
             // console.log({message, room,to,from });
             const todata = await User.findOne({
                 FullName:to})
-            console.log(todata);
+            // console.log(todata);
             const fromData = await User.findOne({
                 FullName:from})
-            console.log(fromData);
+            // console.log(fromData);
     // const userId = await User.
+    if (todata._id > request._id) {
+        room = todata._id + request._id
+    }else{
+        room = request._id + todata._id
+    }
+    console.log(room);
 
             const msg = new Message({ room, content:message,to:todata._id,from:fromData}); // Save the message with the room info
             await msg.save(); // Save to database
@@ -50,6 +78,17 @@ connctDBforChat()
     
         // Handle joining a room
         socket.on('joinRoom', async (room) => {
+            const todata = await User.findOne({
+                FullName:room})
+            
+            console.log(todata._id > request._id);
+            if (todata._id > request._id) {
+                room = todata._id + request._id
+            }else{
+                room = request._id + todata._id
+            }
+            console.log(room);
+            
             socket.join(room); // Join room
     
             // Fetch chat history from the database for the room
