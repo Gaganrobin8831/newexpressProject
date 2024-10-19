@@ -26,119 +26,122 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/', router);
 
 connctDBforChat()
-.then(() => {
-    console.log('Connected to MongoDB');
-    io.on('connection', (socket) => {
+    .then(() => {
+        console.log('Connected to MongoDB');
+        io.on('connection', (socket) => {
 
 
 
-        const cookies = socket.handshake.headers.cookie;
-        let request = {}; // This will hold the user info
-        
-        if (cookies) {
-            const parsedCookies = cookie.parse(cookies);
-            const token = parsedCookies['authToken']; // Assuming 'token' is the cookie name
-    
-            
-               
-                    request = jwt.verify(token, process.env.secret); // Decode the token
-                    console.log("User ID from token:", request._id);
-            
-        }
+            const cookies = socket.handshake.headers.cookie;
+            let request = {}; // This will hold the user info
+
+            if (cookies) {
+                const parsedCookies = cookie.parse(cookies);
+                const token = parsedCookies['authToken']; // Assuming 'token' is the cookie name
 
 
 
+                request = jwt.verify(token, process.env.secret); // Decode the token
+                console.log("User ID from token:", request._id);
 
-        console.log('A user connected:', socket.id);
-    
-        // Handle chat message
-        // Handle chat message
-        socket.on('chatMessage', async ({message, room,to,from }) => {
-            console.log({message, room,to,from });
-            
-            // console.log({message, room,to,from });
-            const todata = await User.findOne({
-                FullName:to})
-            // console.log(todata);
-            const fromData = await User.findOne({
-                FullName:from})
-            // console.log(fromData);
-    // const userId = await User.
-    if (todata._id > request._id) {
-        room = todata._id + request._id
-    }else{
-        room = request._id + todata._id
-    }
-    console.log(room);
-
-            const msg = new Message({ room, content:message,to:todata._id,from:fromData}); // Save the message with the room info
-            await msg.save(); // Save to database
-            io.to(room).emit('recivemessage', message); // Broadcast message to the room
-        });
-    
-        // Handle joining a room
-        socket.on('joinRoom', async (room) => {
-            const todata = await User.findOne({
-                FullName:room})
-            
-            console.log(todata._id > request._id);
-            if (todata._id > request._id) {
-                room = todata._id + request._id
-            }else{
-                room = request._id + todata._id
             }
-            console.log(room);
-            
-            socket.join(room); // Join room
-    
-            // Fetch chat history from the database for the room
-            const allMessageHistory = await Message.aggregate([
-                { $match: { room } },
-                {
-                    $lookup: {
-                        from: 'users',
-                        localField: 'from',
-                        foreignField: '_id',
-                        as: 'fromUser',
+
+
+
+
+            console.log('A user connected:', socket.id);
+
+            // Handle chat message
+            // Handle chat message
+            socket.on('chatMessage', async ({ message, room, to, from }) => {
+                console.log({ message, room, to, from });
+
+                // console.log({message, room,to,from });
+                const todata = await User.findOne({
+                    FullName: to
+                })
+                // console.log(todata);
+                const fromData = await User.findOne({
+                    FullName: from
+                })
+                // console.log(fromData);
+                // const userId = await User.
+                if (todata._id > request._id) {
+                    room = todata._id + request._id
+                } else {
+                    room = request._id + todata._id
+                }
+                console.log(room);
+
+                const msg = new Message({ room, content: message, to: todata._id, from: fromData }); // Save the message with the room info
+                await msg.save(); // Save to database
+                io.to(room).emit('recivemessage', message); // Broadcast message to the room
+            });
+
+            // Handle joining a room
+            socket.on('joinRoom', async (room) => {
+                const todata = await User.findOne({
+                    FullName: room
+                })
+
+                console.log(todata._id > request._id);
+                if (todata._id > request._id) {
+                    room = todata._id + request._id
+                } else {
+                    room = request._id + todata._id
+                }
+                console.log(room);
+
+                socket.join(room); // Join room
+
+                // Fetch chat history from the database for the room
+                const allMessageHistory = await Message.aggregate([
+                    { $match: { room } },
+                    {
+                        $lookup: {
+                            from: 'users',
+                            localField: 'from',
+                            foreignField: '_id',
+                            as: 'fromUser',
+                        },
                     },
-                },
-                {
-                    $lookup: {
-                        from: 'users',
-                        localField: 'to',
-                        foreignField: '_id',
-                        as: 'toUser',
+                    {
+                        $lookup: {
+                            from: 'users',
+                            localField: 'to',
+                            foreignField: '_id',
+                            as: 'toUser',
+                        },
                     },
-                },
-                { $unwind: '$fromUser' },
-                { $unwind: '$toUser' },
-                {
-                    $project: {
-                        content: 1,
-                        'fromUser.FullName': 1,
-                        'toUser.FullName': 1,
+                    { $unwind: '$fromUser' },
+                    { $unwind: '$toUser' },
+                    {
+                        $project: {
+                            content: 1,
+                            'fromUser.FullName': 1,
+                            'toUser.FullName': 1,
+                        },
                     },
-                },
-            ]);
-    
-            socket.emit('chatHistory', allMessageHistory); // Send chat history to the client
+                ]);
+
+                socket.emit('chatHistory', allMessageHistory); // Send chat history to the client
+            });
+
+            // Handle leaving a room
+            socket.on('leaveRoom', (room) => {
+                socket.leave(room);
+            });
+
+            socket.on('disconnect', () => {
+                console.log('User disconnected:', socket.id);
+            });
         });
-    
-        // Handle leaving a room
-        socket.on('leaveRoom', (room) => {
-            socket.leave(room);
+
+        // Start the server
+        http.listen(port, () => {
+            console.log(`Server running at http://localhost:${port}/`);
         });
-    
-        socket.on('disconnect', () => {
-            console.log('User disconnected:', socket.id);
-        });
+    })
+    .catch((error) => {
+        console.error('Error connecting to MongoDB:', error);
     });
-    
-    // Start the server
-    http.listen(port, () => {
-        console.log(`Server running at http://localhost:${port}/`);
-    });
-})
-.catch((error) => {
-    console.error('Error connecting to MongoDB:', error);
-});

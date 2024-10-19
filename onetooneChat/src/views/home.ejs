@@ -255,13 +255,13 @@
                         <span class="myid" hidden>
                             <%= element._id %>
                         </span>
-                        <% if (element.FullName !==  user.name) { %>
+                        <% if (element.FullName !==user.name) { %>
                             <li data-username="<%= element.FullName %>">
                                 <%= element.FullName %>
                             </li>
-                        <% } %>
-                       
-                        <% }) %>
+                            <% } %>
+
+                                <% }) %>
                 </ul>
 
             </div>
@@ -355,7 +355,7 @@
             const createli = document.createElement('li');
             createli.textContent = message;
             // Check if the message is from the current user or from the other user
-         
+
             myul.appendChild(createli);
         });
 
@@ -394,10 +394,10 @@
         function sendMessage() {
             const message = getInputValue.value;
             if (message.trim() && currentRoom) {
-               
+
                 socket.emit('chatMessage', { message, room: currentRoom, to: currentRoom, from: selectedUserId });
-                  // Check if the message is from the current user or from the other user
-               
+                // Check if the message is from the current user or from the other user
+
                 getInputValue.value = ''; // Clear the input field after sending
             } else {
                 alert("Please select a user to chat with!");
