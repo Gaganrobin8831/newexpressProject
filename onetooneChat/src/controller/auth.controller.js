@@ -27,7 +27,7 @@ async function HandleRegester(req,res) {
         res.redirect('/Login')
     } catch (error) {
         console.log(error);
-        res.statuts(400).redirect('/regester')
+        res.redirect('/regester')
         
     }
 
