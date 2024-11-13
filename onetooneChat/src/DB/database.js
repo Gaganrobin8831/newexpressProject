@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 
 const connctDBforChat =async ()=>{
     try {
-        const connectionFordb = await mongoose.connect(`${process.env.DB_URI}/${process.env.DB_NAME}`)
+        const connectionFordb = await mongoose.connect(`${process.env.DB_URI}`)
          const response=await connectionFordb.connection.host;
     // console.log(response);
         console.log(`MONGO DB RUN ON !! ${response}`);
